@@ -4,6 +4,7 @@ from ruuvitag_sensor.ruuvitag import RuuviTag
 from pygal.style import DarkGreenBlueStyle
 from pygal.style import Style
 from datetime import datetime
+from sys import platform
 import config as cfg
 import time
 import requests
@@ -233,8 +234,13 @@ def main_page():
 							selected_report=selected_report,min_max_diff=min_max_diff,
 							days_data=days_data,ac_runtime=ac_runtime,degrees_over_time=degrees_over_time)
 
+if platform == "linux" or platform == "linux2":
+	host = '0.0.0.0'
+elif platform == "darwin":
+	host = '127.0.0.1'
+
 if __name__ == '__main__':
 	app.debug = True
 	TEMPLATES_AUTO_RELOAD = True
 	app.secret_key = '\x96\x8f\x05E]\xfe\xf6\xa6|\xcbY\xa9\xa0\xb9\xd0\xca\x7f[\xe8\xfc\x8c\xab}^'
-	app.run(host='127.0.0.1', port=5010, debug=True)
+	app.run(host=host, port=5010, debug=True)
