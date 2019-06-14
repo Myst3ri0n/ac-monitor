@@ -1,6 +1,7 @@
 from ruuvitag_sensor.ruuvitag import RuuviTag
 from pathlib import Path
 from time import sleep
+import config as cfg
 import requests
 import sqlite3
 import time
