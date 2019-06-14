@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>AC Monitor</title>
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"></script>
+		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"></script>
+	</head>
+	<style>
+	body{
+		background-color: #171717;
+		font-family: arial;
+	}
+
+	.transbox {
+		margin: 30px;
+		background-color: #FFFFFF;
+		border: 1px solid black;
+		opacity: .6;
+		border-radius: 12px;
+		padding: 1em 1em 1em 1em;
+	}
+	.rpt_start_date{
+		float:left;
+		margin-right:15px;
+	}
+	label{
+		color:white;
+		font-size:20px;
+	}
+	#cur_weather_title{
+		text-align: center;
+		font-size: 35px;
+		color: white;
+		text-decoration: bold;
+		letter-spacing: 3px;
+		padding-right: 10px;
+	}
+	.col-sm{
+		color: black;
+		text-align: center;
+	}
+	#min{
+		color:blue;
+	}
+	#max{
+		color:red;
+	}
+	#avg{
+		color:green;
+	}
+	#title{
+		font-size: 22px;
+	}
+	select{
+		margin: 15px;
+		background: rgba(0, 0, 0, 0.3);
+		color: #fff;
+		text-shadow: 0 1px 0 rgba(0, 0, 0, 0.4);
+	}
+	#inputs{
+		text-align: center;
+		padding-bottom: 15px;
+	}
+	</style>
+	<body>
+		<br>
+		<div class="container">
+			<div class="container">
+				<div id="cur_weather_title">
+					Current Air Conditioner Status
+				</div>
+				<div class="transbox">
+					<div class="row">
+						<div class="col-sm">
+							<div id="title">Outside</div>
+							{{ outside_temp }} °F<br>
+							{{ outside_hum }} %
+						</div>
+						<div class="col-sm">
+							Max: <span id="max">{{ min_max_temps['outside']['max_humidity'] }}</span> %<br>
+							Min: <span id="min">{{ min_max_temps['outside']['min_humidity'] }}</span> %<br>
+							Avg: <span id="avg">{{ min_max_temps['outside']['avg_humidity'] }}</span> %
+						</div>
+						<div class="col-sm">
+							Max: <span id="max">{{ min_max_temps['outside']['max_temp'] }}</span> °F<br>
+							Min: <span id="min">{{ min_max_temps['outside']['min_temp'] }}</span> °F<br>
+							Avg: <span id="avg">{{ min_max_temps['outside']['avg_temp'] }}</span> °F
+						</div>
+					</div>
+					<br>
+					<div class="row">
+						<div class="col-sm">
+							<div id="title">Attic</div>
+							{{ results['attic']['temp'] }} °F<br>
+							{{ results['attic']['humidity'] }} %
+						</div>
+						<div class="col-sm">
+							Max: <span id="max">{{ min_max_temps['attic']['max_humidity'] }}</span> %<br>
+							Min: <span id="min">{{ min_max_temps['attic']['min_humidity'] }}</span> %<br>
+							Avg: <span id="avg">{{ min_max_temps['attic']['avg_humidity'] }}</span> %
+						</div>
+						<div class="col-sm">
+							Max: <span id="max">{{ min_max_temps['attic']['max_temp'] }}</span> °F<br>
+							Min: <span id="min">{{ min_max_temps['attic']['min_temp'] }}</span> <br>
+							Avg: <span id="avg">{{ min_max_temps['attic']['avg_temp'] }}</span> °F
+						</div>
+					</div>
+					<br>
+					<div class="row">
+						<div class="col-sm">
+							<div id="title">AC Return</div>
+							{{ results['ac_return']['temp'] }} °F<br>
+							{{ results['ac_return']['humidity'] }} %
+						</div>
+						<div class="col-sm">
+							Max: <span id="max">{{ min_max_temps['ac_return']['max_humidity'] }}</span> %<br>
+							Min: <span id="min">{{ min_max_temps['ac_return']['min_humidity'] }}</span> %<br>
+							Avg: <span id="avg">{{ min_max_temps['ac_return']['avg_humidity'] }}</span> %
+						</div>
+						<div class="col-sm">
+							Max: <span id="max">{{ min_max_temps['ac_return']['max_temp'] }}</span> °F<br>
+							Min: <span id="min">{{ min_max_temps['ac_return']['min_temp'] }}</span> °F<br>
+							Avg: <span id="avg">{{ min_max_temps['ac_return']['avg_temp'] }}</span> °F
+						</div>
+					</div>
+					<br>
+					<div class="row">
+						<div class="col-sm">
+							<div id="title">AC Vent</div>
+							{{ results['ac_vent']['temp'] }} °F<br>
+							{{ results['ac_vent']['humidity'] }} %
+						</div>
+						<div class="col-sm">
+							Max: <span id="max">{{ min_max_temps['ac_vent']['max_humidity'] }}</span> %<br>
+							Min: <span id="min">{{ min_max_temps['ac_vent']['min_humidity'] }}</span> %<br>
+							Avg: <span id="avg">{{ min_max_temps['ac_vent']['avg_humidity'] }}</span> %
+						</div>
+						<div class="col-sm">
+							Max: <span id="max">{{ min_max_temps['ac_vent']['max_temp'] }}</span> °F<br>
+							Min: <span id="min">{{ min_max_temps['ac_vent']['min_temp'] }}</span> °F<br>
+							Avg: <span id="avg">{{ min_max_temps['ac_vent']['avg_temp'] }}</span> °F
+						</div>
+					</div>
+					<br>
+					<div class="row">
+						<div class="col-sm">
+							<div id="title">AC Stats</div>
+							{{ ac_runtime }}<br>
+							{{ degrees_over_time }}
+						</div>
+						<div class="col-sm">
+							<div id="title">Current Diff</div>
+							{{ current_temp_html | safe }} °F
+						</div>
+						<div class="col-sm">
+							Max: <span id="max">{{ min_max_diff['MAX'] }}</span> °F<br>
+							Min: <span id="min">{{ min_max_diff['MIN'] }}</span> °F<br>
+							Avg: <span id="avg">{{ min_max_diff['AVG'] }}</span> °F
+						</div>
+					</div>
+				</div>
+			</div>
+			<form action="{{ post_url }}" method="POST" name="report_select">
+				<div id="inputs">
+					<label>Report:</label>
+				<select name="selected_report" value='{{ selected_report }}'>
+					<option value="temp_over_time">Tempature Over Time</option>
+					<option value="diff_over_time">Tempature Difference Over Time</option>
+				</select>
+				<label>Timeframe:</label>
+				<select name="days_data" value='{{ days_data }}'>
+					<option value="1">One Day</option>
+					<option value="3">Three Days</option>
+					<option value="7">Seven Days</option>
+				</select>
+				<button class="btn btn-primary btn-sm" type="Submit" name="Submit">Refresh</button>
+			</div>
+			</form>
+			<embed type="image/svg+xml" src={{ graph_data | safe }} id="graph_report"/>
+		</div>
+	</body>
+</html>
