@@ -58,7 +58,7 @@ def coolAgainstTime(temp,sec):
 		time_frame = ' °F per Hour'
 		divisor    = sec/3600
 	else: 
-		time_fram = ' °F per Min'
+		time_frame = ' °F per Min'
 		divisor   = sec/60
 
 	amount = round(temp/divisor,2)
