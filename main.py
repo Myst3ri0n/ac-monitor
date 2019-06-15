@@ -58,12 +58,12 @@ while True:
 
 	date_time    = now_date_time()
 	weather_url  = 'https://api.openweathermap.org/data/2.5/weather?zip={},us&appid={}'.format(cfg.zip_code,cfg.weather_api_key)
-	try:
-		r            = requests.get(weather_url)
+	r            = requests.get(weather_url)
+	try
 		outside_temp = convCel(r.json()['main']['temp'])
 		outside_hum  = r.json()['main']['humidity']
 	except:
-		continue
+		print(r.json())
 
 	results.update({'outside':{'temp':outside_temp,'humidity':outside_hum}})
 
