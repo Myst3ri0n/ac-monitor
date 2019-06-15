@@ -29,9 +29,14 @@ custom_style = Style(
 app = Flask(__name__)
 
 def __datetime(date_str):
-    return datetime.strptime(date_str, '%Y-%m-%d %H:%M:%S')
+	date_str = '1970-01-01 12:00:00' if date_str is None else date_str
+	return datetime.strptime(date_str, '%Y-%m-%d %H:%M:%S')
+
+def now_date_time():
+	return (time.strftime("%Y-%m-%d %H:%M:%S"))
 
 def sec2humanTime(sec):
+	sec = 0 if sec is None else sec
 	if sec<60:
 		result = '{} seconds'.format(sec)
 	elif sec>=60 and sec <3600:
@@ -88,12 +93,19 @@ def main_page():
 		selected_report = 'temp_over_time'
 		days_data       = '1'
 
+	record_count = DBQuery("SELECT COUNT(*) FROM TEMP_HISTORY WHERE DATE_READ > datetime('now','-{} day')".format(days_data),True)
+
+	if record_count==0:
+		days_data='30'
+
 	if days_data=='1':
 		time_name = '24 Hours'
 	elif days_data=='3':
 		time_name = '72 Hours'
-	else:
+	elif days_data=='7':
 		time_name = '7 Days'
+	else:
+		time_name = days_data+' Days'
 
 
 	weather_url  = 'https://api.openweathermap.org/data/2.5/weather?zip={},us&appid={}'.format(cfg.zip_code,cfg.weather_api_key)
@@ -112,7 +124,11 @@ def main_page():
 
 	current_temp_diff = round(results['ac_return']['temp'] - results['ac_vent']['temp'],2)
 
-	#setting color based on value
+	ac_is_running = True if current_temp_diff>=10 else False
+
+	print(ac_is_running)
+
+	#SETTING COLOR BASED ON VALUE
 	if current_temp_diff>=13 and current_temp_diff<16:
 		current_temp_html = '<span style="color:orange;">{}</span>'.format(current_temp_diff)
 	elif current_temp_diff>=16:
@@ -144,12 +160,12 @@ def main_page():
 	min_max_diff = {}
 	for m in m_m:
 		q_min_max_diff = """
-					SELECT {}(t1.TEMP - (
+					SELECT COALESCE({}(t1.TEMP - (
 										SELECT 	t2.TEMP 
 										FROM 	TEMP_HISTORY AS t2 
 										WHERE 	t1.DATE_READ=t2.DATE_READ 
 												AND t2.SENSOR_NAME='ac_vent'
-												))
+												)),0)
 					FROM 	TEMP_HISTORY AS t1 
 					WHERE 	t1.SENSOR_NAME='ac_return'
 							AND DATE_READ > datetime('now','-{} day')
@@ -162,6 +178,7 @@ def main_page():
 	count     = 1
 	last_date = ''
 	continuous_ids = []
+	temp_list = []
 	for i in ac_return_ids:
 		if count==1:
 			last_date = DBQuery('SELECT DATE_READ FROM TEMP_HISTORY WHERE ID = {}'.format(i),True)
@@ -171,16 +188,17 @@ def main_page():
 			cur_date = DBQuery('SELECT DATE_READ FROM TEMP_HISTORY WHERE ID = {}'.format(i),True)
 			delta = __datetime(last_date) - __datetime(cur_date)
 			delta = delta.total_seconds()
-			#print(last_date,cur_date)
-			#print(delta)
+			print(last_date,cur_date)
+			temp_list.append(delta-300)
 			last_date = cur_date
 			continuous_ids.append(i)
-			if delta>=330:
+			if delta>=325:
 				break
-	run_start_date = DBQuery("SELECT MAX(DATE_READ) FROM TEMP_HISTORY WHERE ID IN ({})".format(','.join([str(x) for x in continuous_ids])),True)
-	run_end_date   = DBQuery("SELECT MIN(DATE_READ) FROM TEMP_HISTORY WHERE ID IN ({})".format(','.join([str(x) for x in continuous_ids])),True)
-	max_ac_return  = DBQuery("SELECT MAX(TEMP) FROM TEMP_HISTORY WHERE SENSOR_NAME='ac_return' AND DATE_READ='{}'".format(run_end_date),True)
-	min_ac_return  = DBQuery("SELECT MIN(TEMP) FROM TEMP_HISTORY WHERE SENSOR_NAME='ac_return' AND DATE_READ='{}'".format(run_start_date),True)
+	print(temp_list)
+	run_start_date = DBQuery("SELECT COALESCE(MAX(DATE_READ),'1970-01-01 13:00:00') FROM TEMP_HISTORY WHERE ID IN ({})".format(','.join([str(x) for x in continuous_ids])),True)
+	run_end_date   = DBQuery("SELECT COALESCE(MIN(DATE_READ),'1970-01-01 12:00:00') FROM TEMP_HISTORY WHERE ID IN ({})".format(','.join([str(x) for x in continuous_ids])),True)
+	max_ac_return  = DBQuery("SELECT COALESCE(MAX(TEMP),0) FROM TEMP_HISTORY WHERE SENSOR_NAME='ac_return' AND DATE_READ='{}'".format(run_end_date),True)
+	min_ac_return  = DBQuery("SELECT COALESCE(MIN(TEMP),0) FROM TEMP_HISTORY WHERE SENSOR_NAME='ac_return' AND DATE_READ='{}'".format(run_start_date),True)
 
 	run_delta  = __datetime(run_start_date) - __datetime(run_end_date)
 	run_delta  = run_delta.total_seconds()
@@ -188,12 +206,9 @@ def main_page():
 
 	total_degrees_cooled = max_ac_return - min_ac_return
 
-	print(run_delta,total_degrees_cooled)
-	print(run_start_date,run_end_date)
-
 	degrees_over_time = coolAgainstTime(total_degrees_cooled,run_delta)
 
-
+	#RENDER SElECTED GRAPH REPORT
 	if selected_report=='temp_over_time':
 		chart = pygal.Line(style=custom_style,x_label_rotation=20)
 		chart.title = 'Tempature Over {}'.format(time_name)
@@ -228,11 +243,17 @@ def main_page():
 	graph_data = chart.render_data_uri()
 	post_url   = url_for('main_page')
 
+	last_update = DBQuery("SELECT DATE_READ FROM TEMP_HISTORY ORDER BY DATE_READ DESC LIMIT 1",True)
+
+	last_update_delta = __datetime(now_date_time()) - __datetime(last_update)
+	last_update       = sec2humanTime(last_update_delta.total_seconds()) 
+
 	return render_template('pygal_reports.html',graph_data=graph_data,outside_temp=outside_temp,
 							outside_hum=outside_hum,results=results,min_max_temps=min_max_temps,
 							current_temp_html=current_temp_html,post_url=post_url,
 							selected_report=selected_report,min_max_diff=min_max_diff,
-							days_data=days_data,ac_runtime=ac_runtime,degrees_over_time=degrees_over_time)
+							days_data=days_data,ac_runtime=ac_runtime,degrees_over_time=degrees_over_time,
+							ac_is_running=ac_is_running,last_update=last_update)
 
 if platform == "linux" or platform == "linux2":
 	host = '0.0.0.0'

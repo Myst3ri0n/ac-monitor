@@ -147,8 +147,13 @@
 					<div class="row">
 						<div class="col-sm">
 							<div id="title">AC Stats</div>
-							{{ ac_runtime }}<br>
-							{{ degrees_over_time }}
+							{% if ac_is_running %}
+								<span class="badge badge-primary">Runtime</span>{{ ac_runtime }}<br>
+							{% else %}
+								<span class="badge badge-danger">AC Not Running</span><br>
+								<span class="badge badge-primary">Last Update</span> {{ last_update }}<br>
+							{% endif %}
+							<span class="badge badge-primary">Cooling Speed</span> {{ degrees_over_time }}
 						</div>
 						<div class="col-sm">
 							<div id="title">Current Diff</div>
