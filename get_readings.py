@@ -10,7 +10,7 @@ kelvin_substract = 273.15
 
 
 def DBQuery(q,fo=False):
-	conn = sqlite3.connect('data.db')
+	conn = sqlite3.connect(Path('data.db').resolve())
 	conn.text_factory = str
 	cur = conn.cursor()
 	cur.execute(q)
@@ -54,45 +54,44 @@ sensors = {
 
 results = {}
 
-while True:
 
-	date_time    = now_date_time()
-	weather_url  = 'https://api.openweathermap.org/data/2.5/weather?zip={},us&appid={}'.format(cfg.zip_code,cfg.weather_api_key)
-	r            = requests.get(weather_url)
-	try:
-		outside_temp = convCel(r.json()['main']['temp'])
-		outside_hum  = r.json()['main']['humidity']
-	except:
-		print(r.json())
+date_time    = now_date_time()
+weather_url  = 'https://api.openweathermap.org/data/2.5/weather?zip={},us&appid={}'.format(cfg.zip_code,cfg.weather_api_key)
+r            = requests.get(weather_url)
+try:
+	outside_temp = convCel(r.json()['main']['temp'])
+	outside_hum  = r.json()['main']['humidity']
+except:
+	print(r.json())
 
-	results.update({'outside':{'temp':outside_temp,'humidity':outside_hum}})
+results.update({'outside':{'temp':outside_temp,'humidity':outside_hum}})
 
-	for name, mac in sensors.items():
-		sensor   = RuuviTag(mac)
-		state    = sensor.update()
-		temp     = convCel(sensor.state['temperature'])
-		humidity = sensor.state['humidity']
-		#print(sensor.state)
-		results.update({name:{'temp':temp,'humidity':humidity}})
+for name, mac in sensors.items():
+	sensor   = RuuviTag(mac)
+	state    = sensor.update()
+	temp     = convCel(sensor.state['temperature'])
+	humidity = sensor.state['humidity']
+	#print(sensor.state)
+	results.update({name:{'temp':temp,'humidity':humidity}})
 
-	temp_diff = results['ac_return']['temp'] - results['ac_vent']['temp'] 
+temp_diff = results['ac_return']['temp'] - results['ac_vent']['temp'] 
 
-	print('Date Read: ',date_time)
+print('Date Read: ',date_time)
 
-	for sensor, data in results.items():
-		temp = data['temp']
-		hum  = data['humidity']
+for sensor, data in results.items():
+	temp = data['temp']
+	hum  = data['humidity']
 
-		print(sensor,' Temp:',temp,'Humidity:',humidity)
+	print(sensor,' Temp:',temp,'Humidity:',humidity)
 
-		if temp_diff>10:
-			print("Data Logged...")
-			query = """
-						INSERT INTO TEMP_HISTORY(DATE_READ,SENSOR_NAME,TEMP,HUMIDITY) 
-						VALUES('{}','{}','{}','{}');
-					""".format(date_time,sensor,temp,hum)
-			DBQuery(query)
-		else:
-			print("Data Not Logged...")
-	print('\n')
-	sleep(300)
+	if temp_diff>10:
+		print("Data Logged...")
+		query = """
+					INSERT INTO TEMP_HISTORY(DATE_READ,SENSOR_NAME,TEMP,HUMIDITY) 
+					VALUES('{}','{}','{}','{}');
+				""".format(date_time,sensor,temp,hum)
+		DBQuery(query)
+	else:
+		print("Data Not Logged...")
+print('\n')
+
