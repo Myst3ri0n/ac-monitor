@@ -10,7 +10,7 @@ kelvin_substract = 273.15
 
 
 def DBQuery(q,fo=False):
-	conn = sqlite3.connect(Path('data.db').resolve())
+	conn = sqlite3.connect(str(Path('data.db').resolve()))
 	conn.text_factory = str
 	cur = conn.cursor()
 	cur.execute(q)
