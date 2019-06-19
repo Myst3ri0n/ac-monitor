@@ -192,7 +192,7 @@ def main_page():
 			temp_list.append(delta-300)
 			last_date = cur_date
 			continuous_ids.append(i)
-			if delta>=325:
+			if delta>=310:
 				break
 	print(temp_list)
 	run_start_date = DBQuery("SELECT COALESCE(MAX(DATE_READ),'1970-01-01 13:00:00') FROM TEMP_HISTORY WHERE ID IN ({})".format(','.join([str(x) for x in continuous_ids])),True)
